@@ -1,0 +1,85 @@
+<div class="container ms-5 col-2">
+  <%= link_to 'Voltar', buffet_path(@event.buffet.id), class: "btn btn-dark mb-3" %>
+</div>
+
+<div id="events" class="container d-flex justify-content-center mb-5">
+  <div id=event-details class="shadow rounded p-4 mx-3 col-7">
+
+    <div class = "container d-flex align-items-center">
+      <h2 ><%= @event.name %></h2>
+      <span class="rounded bg-dark buffet-tag text-light px-2 ms-2" %><strong><%= @event.buffet.company.buffet_name %></strong></span>
+    </div>
+    <hr>
+    <% unless @event.active %>
+      <h5 class="text-danger">Este Evento está desativado</h5>
+    <% end %>
+    
+    <% if @event.event_cover.present? %>
+        <div class="rounded shadow my-3 col-12">
+          <%= render 'carroussel' %>
+        </div>
+    <% end %>
+
+    <hr>
+    <p><strong class="fs-5">Descrição do evento:</strong> <%= @event.description %></p>
+    <hr>
+    <p><strong class="fs-5">Menu do evento:</strong> <%= @event.menu %></p>
+    <hr>
+    <p><strong class="fs-5">Limite mínimo de pessoas:</strong> <%= @event.min_quorum %></p>
+    <p><strong class="fs-5">Limite máximo de pessoas:</strong> <%= @event.max_quorum %></p>
+    <p><strong class="fs-5">Duração padrão do evento (min):</strong> <%= @event.standard_duration %></p>
+    <p><strong class="fs-5">Serve bebida alcoólica:</strong> <%= @event.translate @event.serve_alcohol %></p>
+    <p><strong class="fs-5">Faz a decoração:</strong> <%= @event.translate @event.handle_decoration %></p>
+    <p><strong class="fs-5">Serviço de estacionamento/valet:</strong> <%= @event.translate @event.valet_service %></p>
+    <p><strong class="fs-5">Realiza evento no local do contratante:</strong> <%= @event.translate @event.flexible_location %></p>
+    
+    <% if company_signed_in? && current_company.buffet == @event.buffet%>
+      <div class="d-flex">
+        <%= link_to 'Editar', edit_event_path(@event.id), class: "btn btn-dark me-3" %>
+        <% if @event.active %>
+          <%= button_to 'Desativar Evento', deactivate_event_path(@event.id), method: :post, class: "btn btn-warning me-3" %>
+        <% else %>
+          <%= button_to 'Reativar Evento', activate_event_path(@event.id), method: :post, class: "btn btn-primary me-3" %>
+        <% end %>  
+        <%= button_to 'Remover evento', event_path(@event.id), method: :delete, class: "btn btn-danger" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div id="pricings" class="shadow rounded p-4 mx-3 col-4" style="height: 100%">
+    <h2>Precificação do evento</h2>
+    <hr>
+    <% Pricing.all.each do |pricing| %>
+      <div id=<%="pricing-#{pricing.id}" %>>
+        <h4><%= pricing.category %></h4>
+
+        <% if @event.event_pricings.find_by(pricing_id: pricing.id) %>
+          <% event_pricing = @event.event_pricings.find_by(pricing_id: pricing.id) %>
+          <p><%= "Preço base (#{@event.min_quorum} pessoas): #{number_to_currency event_pricing.base_price}"%></p>
+          <p><%= "Adicional por pessoa: #{number_to_currency event_pricing.extra_person_fee}"%></p>
+          <p><%= "Adicional por hora extra de evento: #{number_to_currency event_pricing.extra_hour_fee}"%></p>
+          
+          <% if client_signed_in? %>
+            <%= link_to 'Contratar',  new_event_pricing_order_path(event_pricing.id), class: "btn btn-dark" %>
+          <% end %>
+          
+          <% if company_signed_in? && current_company.buffet == @event.buffet %>
+            <div class="d-flex">
+              <%= link_to 'Editar', edit_event_pricing_path(event_pricing.id), class: "btn btn-outline-dark me-2" %>
+              <%= button_to 'Remover',  event_pricing_path(event_pricing.id), method: :delete, class: "btn btn-outline-danger me-2" %>
+            </div>
+          <% end %>
+        <% else %>
+          
+          <% if company_signed_in? && current_company.buffet == @event.buffet %>
+            <%= link_to "Configurar", new_event_pricing_event_pricing_path(@event.id, pricing.id), class: "btn btn-outline-dark " %>
+          <% else %>
+            <p>Este Buffet não possui cadastro de preços para este período</p>
+          <% end %>
+          
+        <% end %>
+      </div>
+      <hr>
+    <% end %>
+  </div>
+</div>

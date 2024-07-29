@@ -1,0 +1,156 @@
+<% unless company_signed_in? %>
+  <div class="container ms-5">
+    
+    <% if @url.present? %>
+      <%= link_to 'Voltar', @url, class: "btn btn-dark me-4" %>
+    <% else %>
+      <%= link_to 'Voltar', root_path, class: "btn btn-dark me-4" %>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="container d-flex justify-content-center mb-5">
+
+  <div id="buffet-details" class="shadow rounded p-3 mx-3 col-7">
+    <div class="container">
+      <% if client_signed_in? && @client_confirmed_past_orders.any? && current_client.ratings.empty? %>
+        <%= link_to 'Avaliar Buffet', new_buffet_rating_path(@buffet.id), class: "btn btn-success"%>
+        <hr>
+      <% end %>
+     
+      <% if company_signed_in? && current_company.buffet == @buffet %>
+        <h2>Informações do Buffet</h2>
+        <hr>
+        <% unless @buffet.active %>
+          <h5 class="text-danger">Este Buffet está desativado</h5>
+        <% end %>
+        <% if @buffet.cover.present? %>
+          <strong class="fs-5">Fotos:</strong>
+          <div class="rounded shadow my-3 col-12">
+            <%= render 'carroussel' %>
+          </div>
+        <% end %>
+        <p><strong class="fs-5">Nome fantasia: </strong><%= @buffet.company.buffet_name%></p>
+        <p><strong class="fs-5">Razão social: </strong><%= @buffet.company_name%></p>
+        <p><strong class="fs-5">CNPJ: </strong><%= @buffet.company.company_registration_number%></p>
+      <% else %>
+        <h2><%= @buffet.company.buffet_name %></h2>
+        <% if @buffet.ratings.any? %>
+          <div>
+            <div class="rating">
+              <% (1..5).each do |i| %>
+                <% if i <= @buffet.average_rating %>
+                  <span class="fa fa-star checked"></span>
+                <% else %>
+                  <span class="fa fa-star"></span>
+                <% end %>
+              <% end %>
+            </div>
+            <span>(<%= @buffet.average_rating %>)</span>
+          </div>
+        <% end %>
+        <hr>
+        <strong>Fotos:</strong>
+        <% if @buffet.cover.present? %>
+          <div class="rounded shadow my-3 col-12">
+            <%= render 'carroussel' %>
+          </div>
+        <% end %>
+        <p><strong class="fs-5">CNPJ: </strong><%= @buffet.company.company_registration_number%></p>
+      <% end %>
+      <p><strong class="fs-5">Descrição: </strong><%= @buffet.description%></p>
+      <p><strong class="fs-5">E-mail: </strong><%= @buffet.email%></p>
+      <p><strong class="fs-5">Telefone para contato: </strong><%= @buffet.phone_number%></p>
+      <p><strong class="fs-5">CEP: </strong><%= @buffet.zip_code%></p>
+      <p><strong class="fs-5">Endereço: </strong><%= @buffet.adress%></p>
+      <p><strong class="fs-5">Bairro: </strong><%= @buffet.neighborhood%></p>
+      <strong class="fs-5">Métodos de pagamento aceitos:</strong>
+      <ul id="payments">
+        <% @buffet.payment_methods.each do |pm| %>
+          <li><%= pm.method %></li>
+        <% end %>
+      </ul>
+      <p><strong class="fs-5">Cidade: </strong><%= @buffet.city%></p>
+      <p><strong class="fs-5">Estado: </strong><%= @buffet.state_code%></p>
+      <% if company_signed_in? && current_company.buffet == @buffet %>
+        <div class="d-flex">
+          <%= link_to 'Editar informações', edit_buffet_path(@buffet.id), class: "btn btn-dark me-2" %>
+          <% if @buffet.active %>
+            <%= button_to 'Desativar Buffet', deactivate_buffet_path(@buffet.id), method: :post, class: "btn btn-warning" %>
+          <% else %>
+            <%= button_to 'Reativar Buffet', activate_buffet_path(@buffet.id), method: :post, class: "btn btn-primary" %>
+          <% end %>
+        </div>
+      <% end %>
+      </div>
+  </div>
+
+  <div class="col-4">
+    <div id="events" class="shadow rounded p-3 mx-3" style="height: auto;">
+      <div class="container text-center">
+        
+        <% if company_signed_in? && current_company.buffet == @buffet %>
+          <h2>Eventos cadastrados</h2>
+        <% else %>
+          <h2>Eventos disponíveis</h2>
+        <% end %>
+        
+        <hr>
+        <% if company_signed_in? && current_company.buffet == @buffet %>
+          <div class="container text-center">
+            <%= link_to 'Cadastrar evento', new_event_path, class: "btn btn-dark" %>
+          </div>
+          <hr>
+        <% end %> 
+        <div class="overflow-y-scroll overflow-hidden" style="height:600px">
+          <% if @buffet.events.empty? %>
+            <p>Não existem eventos cadastrados</p>
+          <% else %>
+            <div class="row text-center d-flex justify-content-center" id="event">
+              <% @buffet.events.where(active: true).each do |event| %>
+                <div class="col-10 mb-3 rounded-5 border p-4" id=<%= "event-#{event.id}"%>>
+                  <%= link_to event.name, event_path(event.id), class: "btn btn-outline-dark rounded-5", style:"font-size: 20px" %>
+                  <hr>
+                  <% if event.event_cover.present? %>
+                    <%= image_tag event.event_cover, class: "card-img-top img-fluid rounded-5" %>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div id="ratings" class="shadow rounded p-3 mx-3 mt-4">
+      <h2 class="text-center">Avaliações</h2>
+      <hr>
+       
+      <% if @buffet.ratings.length > 3 %>
+       <div class="text-center">
+          <%= link_to 'Ver todas as avaliações', buffet_ratings_path(@buffet.id), class: "btn btn-dark" %>
+        </div>
+        <hr>
+      <% end %>
+
+      <div class="overflow-y-scroll overflow-hidden" style="height: 600px">
+        <% if @buffet.ratings.any? %>
+        <div class="row d-flex justify-content-center">
+          <% @buffet.ratings.reverse.slice(0, 3).each do |rating| %>
+            <div class="col-10 mb-3 rounded-5 border p-4">
+              <h2 class="text-center"><%= rating.value %>/5</h2>
+              <hr>
+              <i>Por: <%= rating.client.full_name %></i>
+              <p><%= rating.feedback %></p>
+              <% if rating.image.present? %>
+                <%= image_tag rating.image, class: "card-img-top img-fluid rounded-5" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+

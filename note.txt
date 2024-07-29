@@ -1,0 +1,33 @@
+na view temos que gerar dinamicamente os 2 pricings
+
+ps: os testes vao quebrar
+
+ps: eu sei daquilo, mas esquece, foca no codigo!
+tmj eu mesmo!
+
+ass: a firma kkkkkkkkkkkkk doente que fala sozinho
+
+ainda ta digitando? pior voce q ta lendo kkkkkkkkkkkkkkkkkkkkkkkk
+
+//29/4 => fim da sprint 2
+
+Não faço a mínima ideia de como testar as fotos do carrossel
+missão impossível. 
+
+ps: testes de autenticação ainda pendentes!!!!!!!!!!!!!!!! 
+
+////////////////////////////////////////////////
+
+TODO MEU NOBRE: 
+
+- validação de CPF
+- validação de CNPJ
+
+
+==============================================================
+
+13/05/2024
+
+cliente deve poder recusar proposta
+poblema de nao deletar evento esta pq os evento pricing tem ordi
+

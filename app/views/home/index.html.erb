@@ -1,0 +1,48 @@
+<div class="d-flex justify-content-center" id="buffets">
+  <div class="container">
+
+    <div class="container text-center">
+      <h2>Bem vindo ao Cadê Buffet!</h2>
+    </div>
+
+    <% if company_signed_in? %>
+      <%= link_to 'Acessar meu Buffet', buffet_path(current_company.buffet.id) %>
+    <% end %>
+    
+    <div class="row mt-4">
+      <% @buffets.each do |buffet| %>
+
+        <div class="card m-3 box" style="width: 18rem;" id=<%="buffet-#{buffet.id}"%>>
+          
+          <% if buffet.cover.present? %>
+            <%= image_tag buffet.cover, class:"card-img-top img-fluid" %>
+          <% end %>
+
+          <% if buffet.ratings.any? %>
+            <div>
+              <div class="rating mt-2 ms-3">
+                <% (1..5).each do |i| %>
+                  <% if i <= buffet.average_rating %>
+                    <span class="fa fa-star checked"></span>
+                  <% else %>
+                    <span class="fa fa-star"></span>
+                  <% end %>
+                <% end %>
+              </div>
+              <span>(<%= buffet.average_rating %>)</span>
+            </div>
+          <% end %>
+            
+          <div class="card-body">
+            <h5 class="card-title"><%= buffet.company.buffet_name %></h5>
+            <p class="card-text"><%= "#{buffet.city}, #{buffet.state_code}" %></p>
+            <%= link_to 'Ver detalhes', buffet_path(buffet.id), class: "btn btn-dark btn-index" %>
+          </div>
+        </div>
+        
+      <% end %>
+    </div>
+
+  </div>
+</div>
+

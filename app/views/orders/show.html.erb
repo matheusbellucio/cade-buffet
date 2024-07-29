@@ -1,0 +1,115 @@
+<% color = { "pending" => "bg-warning", "awaiting" => "bg-warning", "confirmed" => "bg-success", "canceled" => "bg-danger" } %>
+
+<% if company_signed_in? && @duplicated_booking_dates.any? %>
+  <div class="container border mb-2 col-4">
+    <p class="text-danger mb-1"><%= "Já existe um ou mais pedidos requeridos para esta data (#{l(@order.booking_date)}):" %></p>
+    <ul>
+      <% @duplicated_booking_dates.each do |order| %>
+        <li><p><%= "Pedido: #{order.code} - #{order.event_pricing.event.name}" %></p></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+
+<div class="container d-flex justify-content-center mb-5">
+  <div>
+    <div class="rounded shadow px-5 pb-3 pt-3 mt-5">
+      <div class="container text-center mb-3">
+        <span class="<%= "rounded p-1 #{color[@order.status]}" %>"><strong><%= t(@order.status) %></strong></span>
+      </div>
+      <h3>Código do pedido: <%= @order.code %></h3>
+      <hr>
+      <p><strong>Buffet: </strong><%= @order.company.buffet_name %></p>
+      <p><strong>Evento: </strong><%= @order.event_pricing.event.name %></p>
+      <p><strong>Número de convidados: </strong><%= @order.predicted_guests %></p>
+      <p><strong>Data do evento: </strong><%= l(@order.booking_date) %></p>
+      <p><strong>Local do evento: </strong><%= @order.event_adress %></p>
+      <p><strong>Detalhes do evento: </strong><%= @order.event_details %></p>
+      
+      <div class="pt-2 d-flex" id="order-actions">
+        <% if company_signed_in? && @order.budget.blank? && @order.status == "pending" %>
+          <%= link_to 'Criar orçamento', new_order_budget_path(order_id: @order.id), class: "btn btn-dark me-2" %>
+        <% end %>
+        <% if company_signed_in? && @order.status == "awaiting" || @order.status == "pending"%>
+          <%= button_to 'Cancelar pedido', canceled_order_path, method: :post, class: "btn btn-danger" %>
+        <% end %>
+      </div>
+      <hr>
+
+      <% if @order.budget.present? %>
+        <div>
+          <h5>Orçamento proposto:</h5>
+          <p><strong>Preço base para <%= @order.predicted_guests %> convidados: </strong><%= number_to_currency @order.budget.base_price %></p>
+          
+          <% if @order.budget.additional_cost > 0 %>
+            <p><strong>Taxa extra: </strong><%= number_to_currency @order.budget.additional_cost %></p>
+            <p><strong>Razão da taxa extra: </strong><%= @order.budget.additional_cost_describe %></p>
+          <% end %>
+          
+          <% if @order.budget.discount > 0 %>
+            <p><strong>Desconto: </strong><%= number_to_currency @order.budget.discount %></p>
+            <p><strong>Razão do desconto: </strong><%= @order.budget.discount_describe %></p>
+          <% end %>
+          <p><strong>Forma de pagamento: </strong><%= @order.budget.payment_method.method %></p>
+          <strong>Total: <%= number_to_currency @order.budget.final_price %></strong>
+
+          <% if client_signed_in? && @order.status == "awaiting"%>
+            <hr>
+            <div>
+              <strong class="text-danger">Data limite para confirmar pedido: <%= l(@order.budget.proposal_deadline) %></strong>
+              <div class="d-flex mt-2">
+                <%= button_to "Confirmar pedido", confirmed_order_path(@order.id), method: :post, class: "btn btn-primary me-3" %>
+                <%= button_to 'Cancelar pedido', canceled_order_path, method: :post, class: "btn btn-danger" %>
+              </div>
+            </div>
+          <% end %>
+          
+          <hr>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <% if client_signed_in? && @order.messages.any? || company_signed_in? %>
+    <div class="ms-3 d-flex flex-column col-6">
+      <h2 class="container text-center">Chat com o <%= company_signed_in? ? "Cliente" : "Buffet" %></h2>
+      <div id="message-box" class="container col-12 shadow rounded-5 border p-2 d-flex flex-column overflow-y-scroll overflow-hidden" style="height: 480px;">
+        <% unless @order.messages.any? %>
+          <h4 class="align-self-center" style="margin-top: 30%; color: grey">Mande uma mensagem para o cliente...</h4>
+        <% end %>
+        <% @order.messages.each do |message| %>
+          <% if company_signed_in? %>
+            <% alignment_class = message.user_type == "Client" ? "align-self-start text-start" : "align-self-end text-end" %>
+            <div class="<%= "#{alignment_class}"%> w-50 justify-items-center mx-3 text-wrap mt-2">
+              <% color_class = message.user_type == "Client" ? "border" : "bg-dark text-light" %>
+              <span class="rounded-5 d-inline-block py-2 px-4 text-break <%="#{color_class}"%>"><%=message.content %></span>
+              <p class="mx-3" style="font-size: 12px"><%=l message.created_at, format: :short%></p>
+            </div>
+          <% else %>
+            <% alignment_class = message.user_type == "Company" ? "align-self-start text-start" : "align-self-end text-end" %>
+            <div class="<%= "#{alignment_class}"%> w-50 justify-items-center mx-3">
+              <% color_class = message.user_type == "Company" ? "border" : "bg-dark text-light" %>
+              <span class="rounded-5 d-inline-block py-2 px-4 text-break <%="#{color_class}"%>"><%=message.content %></span>
+              <p class="mx-3" style="font-size: 12px"><%=l message.created_at, format: :short%></p>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+      <div class="align-self-center mt-1 d-flex" id="message-input">
+        <%= form_with model: [@order, @message], class:"d-flex" do |f| %>
+          <%= f.text_field :content, class:"rounded-5 border-1 form-control form-control-lg", placeholder:"escreva uma mensagem..." %>
+          <%= f.submit "Enviar", class:"align-self-center rounded-5 btn btn-outline-secondary ms-2"%>
+        <% end %>
+      </div>
+      </div>
+    </div>
+  <% end %>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var messageBox = document.getElementById("message-box");
+    messageBox.scrollTop = messageBox.scrollHeight;
+  });
+</script>
+
